@@ -2,6 +2,11 @@ import re
 from validate_docbr import CPF
 from django.core.exceptions import ValidationError
 
+def validar_nota(valor):
+    if float(valor) > 10:
+        raise ValidationError('A nota não pode ser maior que 10.')
+    
+
 def telefone_validate(value):
     if not value.isdigit():
         raise ValidationError(
@@ -16,6 +21,7 @@ def telefone_validate(value):
         )
     return value
 
+
 def cpf_validate(value):
     cpf = CPF()
     if not cpf.validate(value):
@@ -23,6 +29,7 @@ def cpf_validate(value):
             ("%(value)s is not a valid CPF"),
             params={"value": value},
     )  
+
 
 def cep_validate(value):
     if not re.match(r'^\d{5}-\d{3}$', value):

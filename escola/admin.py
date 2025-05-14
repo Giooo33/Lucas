@@ -1,5 +1,13 @@
+from django.urls import path
+from django.http import FileResponse
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from io import BytesIO
 from django.contrib import admin
-from escola.models import Responsavel, Aluno, Professor, Turma, Materia, Contrato
+from django.http import HttpResponse
+from django.utils.html import format_html
+from .models import Contrato
+from escola.models import Responsavel, Aluno, Professor, Turma, Materia, Contrato, Nota_e_desempenho
 
 class TurmaAdmin(admin.ModelAdmin):
     list_display = ('id', 'turma_nome', 'itinerario_nome')
@@ -11,6 +19,32 @@ class MateriaAdmin(admin.ModelAdmin):
     search_fields = ('materia_nome',)
     list_filter = ('materia_nome',)
    
+class Nota_e_desempenhoAdmin(admin.ModelAdmin):
+    list_display = ('id', 'nota_1_bimestre', 'nota_2_bimestre', 'nota_3_bimestre', 'nota_4_bimestre')
+
+    def media(self, obj):
+        return obj.calcular_media()
+
+    media.short_description = 'Média'
+
+    def botao_boletim(self, obj):
+        return format_html('<a class="button" href="{}">Gerar Boletim</a>', f'gerar-boletim/{obj.id}/')
+
+    botao_boletim.short_description = 'Boletim'
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('gerar-boletim/<int:nota_id>/', self.admin_site.admin_view(self.gerar_boletim), name='gerar_boletim'),
+        ]
+        return custom_urls + urls
+
+    def gerar_boletim(self, request, nota_id):
+        nota = self.get_object(request, nota_id)
+        boletim_pdf = nota.gerar_boletim_pdf()
+        return FileResponse(boletim_pdf, as_attachment=True, filename=f'boletim_{nota.aluno.nome_aluno}.pdf')
+
+
 class AlunoAdmin(admin.ModelAdmin):
     list_display =('nome_aluno', 'numero_telefone_aluno', 'email_aluno', 'numero_matricula_aluno', 'CPF_aluno', 'data_nascimento_aluno', 'class_choices', 'cep_aluno' )
     list_display_links = ('nome_aluno', 'numero_telefone_aluno', 'email_aluno', 'numero_matricula_aluno')
@@ -30,21 +64,42 @@ class ProfessorAdmin(admin.ModelAdmin):
     list_filter = ('nome_professor',)
 
 class ContratoAdmin(admin.ModelAdmin):
-    list_display =('aluno', 'responsavel', 'download_contrato')
-    actions = ['download_contrato']
-    list_display_links = ('aluno', 'responsavel', 'download_contrato')
-    search_fields = ('aluno', 'responsavel',)
-    list_filter = ('aluno', 'responsavel',)
+    list_display = ('aluno', 'responsavel', 'download_contrato', 'upload_contrato_assinado', 'botao_gerar_pdf')
+    search_fields = ('aluno__nome_aluno', 'responsavel__nome_responsavel')
+    exclude = ('contrato_pdf', 'contrato_assinado') # Exclui os campos de upload do formulário
 
-#gerar um link para o downlaod do contrato   
-    def download_contrato(self, request, queryset):
-        for contrato in queryset:
-            # Aqui você pode implementar a lógica para gerar o PDF do contrato
-            # e retornar um link para download.
-            pass
-    download_contrato.short_description = "Download do Contrato"
-    #Registrar as classes no Django Admin
+    def download_contrato(self, obj):
+        if obj.contrato_pdf and hasattr(obj.contrato_pdf, 'url'):
+            return format_html('<a href="{}" target="_blank">Download</a>', obj.contrato_pdf.url)
+        return 'No contrato disponível'
 
+    download_contrato.short_description = 'Download do Contrato'
+
+    def upload_contrato_assinado(self, obj):
+        if obj.contrato_assinado and hasattr(obj.contrato_assinado, 'url'):
+            return format_html('<a href="{}" target="_blank">Ver Contrato Assinado</a>', obj.contrato_assinado.url)
+        return 'Nenhum contrato assinado disponível'
+
+    upload_contrato_assinado.short_description = 'Contrato Assinado'
+
+    def botao_gerar_pdf(self, obj):
+        return format_html('<a class="button" href="{}">Gerar PDF</a>', f'gerar-pdf/{obj.id}/')
+
+    botao_gerar_pdf.short_description = 'Gerar PDF'
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('gerar-pdf/<int:contrato_id>/', self.admin_site.admin_view(self.gerar_pdf), name='gerar_pdf'),
+        ]
+        return custom_urls + urls
+
+    def gerar_pdf(self, request, contrato_id):
+        contrato = self.get_object(request, contrato_id)
+        contrato.gerar_contrato_pdf()  # Gera o PDF automaticamente
+        return FileResponse(contrato.contrato_pdf.open(), as_attachment=True, filename=f'contrato_{contrato_id}.pdf')
+
+admin.site.register(Nota_e_desempenho, Nota_e_desempenhoAdmin)
 admin.site.register(Contrato, ContratoAdmin)
 admin.site.register(Turma, TurmaAdmin)
 admin.site.register(Responsavel,  ResponsaveisAdmin)
