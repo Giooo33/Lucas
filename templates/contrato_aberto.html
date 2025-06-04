@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Contrato Aberto</title>
+    <script>
+        window.onload = function() {
+            window.open("{{ pdf_url }}", "_blank");
+        };
+    </script>
+</head>
+<body>
+    <p>O contrato foi aberto em uma nova aba. Se não abrir, <a href="{{ pdf_url }}" target="_blank">clique aqui</a>.</p>
+</body>
+</html>
