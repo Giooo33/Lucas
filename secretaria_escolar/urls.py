@@ -16,7 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from escola import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('boletim/<int:pk>/', views.boletim_visualizacao, name='boletim_visualizacao'),
+    path('boletim/<int:pk>/download/', views.boletim_download, name='boletim_download'),
+    path('boletim/<int:pk>/inline/', views.boletim_inline, name='boletim_inline'),
 ]

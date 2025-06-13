@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Adicionar Nota e Desempenho</h2>
+<form method="post">
+    {% csrf_token %}
+    <label for="professor_id">Professor:</label>
+    <select name="professor_id" id="professor_id" required>
+        {% for professor in professores %}
+            <option value="{{ professor.id }}">{{ professor.nome_professor }}</option>
+        {% endfor %}
+    </select><br>
+    <label for="senha_professor">Senha do Professor:</label>
+    <input type="password" name="senha_professor" id="senha_professor" required><br>
+    <label for="materia_id">Matéria:</label>
+    <select name="materia_id" required>
+        {% for materia in materias %}
+            <option value="{{ materia.id }}">{{ materia.materia_nome }}</option>
+        {% endfor %}
+    </select><br>
+    <label for="aluno_id">Aluno:</label>
+    <select name="aluno_id" required>
+        {% for aluno in alunos %}
+            <option value="{{ aluno.id }}">{{ aluno.nome_aluno }}</option>
+        {% endfor %}
+    </select><br>
+    <label>Nota 1º Bimestre:</label><input type="text" name="nota_1_bimestre" required><br>
+    <label>Nota 2º Bimestre:</label><input type="text" name="nota_2_bimestre" required><br>
+    <label>Nota 3º Bimestre:</label><input type="text" name="nota_3_bimestre" required><br>
+    <label>Nota 4º Bimestre:</label><input type="text" name="nota_4_bimestre" required><br>
+    <button type="submit">Salvar Notas</button>
+</form>
+{% if messages %}
+    <ul>
+    {% for message in messages %}
+        <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Boletim Escolar</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .pdf-container { width: 100%; height: 80vh; border: 1px solid #ccc; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Boletim Escolar</h1>
+    <div class="pdf-container">
+        <iframe src="{{ pdf_url }}" width="100%" height="100%"></iframe>
+    </div>
+</body>
+</html>

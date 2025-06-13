@@ -2,13 +2,69 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contrato Gerado</title>
+    <title>Assinar Contrato</title>
+    <style>
+        .signature-block { margin-bottom: 30px; }
+        .signature-label { font-weight: bold; }
+        .actions { margin-top: 10px; }
+        canvas { border: 1px solid #ccc; width: 400px; height: 120px; }
+    </style>
 </head>
 <body>
-    <h1>Contrato Gerado</h1>
-    <p>O contrato foi gerado com sucesso. Clique no link abaixo para fazer o download:</p>
-    
-    <a href="{{ gerar_contrato_pdf.url }}" target="_blank">Baixar o Contrato</a>
+    <h2>Contrato</h2>
+    <iframe src="{{ contrato.contrato_pdf.url }}" width="100%" height="500px"></iframe>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="signature-block">
+            <div class="signature-label">Assinatura do Responsável:</div>
+            <canvas id="signature-resp"></canvas>
+            <input type="hidden" name="assinatura_responsavel" id="assinatura_responsavel">
+            <button type="button" onclick="clearPad('signature-resp')">Limpar</button>
+        </div>
+        <div class="signature-block">
+            <div class="signature-label">Assinatura do Aluno:</div>
+            <canvas id="signature-aluno"></canvas>
+            <input type="hidden" name="assinatura_aluno" id="assinatura_aluno">
+            <button type="button" onclick="clearPad('signature-aluno')">Limpar</button>
+        </div>
+        <div class="actions">
+            <button type="submit">Salvar Assinaturas</button>
+        </div>
+    </form>
+    <script>
+        function setupPad(canvasId, inputId) {
+            var canvas = document.getElementById(canvasId);
+            var ctx = canvas.getContext('2d');
+            var drawing = false;
+            canvas.addEventListener('mousedown', function(e) {
+                drawing = true;
+                ctx.beginPath();
+                ctx.moveTo(e.offsetX, e.offsetY);
+            });
+            canvas.addEventListener('mousemove', function(e) {
+                if (drawing) {
+                    ctx.lineTo(e.offsetX, e.offsetY);
+                    ctx.stroke();
+                }
+            });
+            canvas.addEventListener('mouseup', function(e) {
+                drawing = false;
+            });
+            canvas.addEventListener('mouseleave', function(e) {
+                drawing = false;
+            });
+        }
+        function clearPad(canvasId) {
+            var canvas = document.getElementById(canvasId);
+            var ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        setupPad('signature-resp', 'assinatura_responsavel');
+        setupPad('signature-aluno', 'assinatura_aluno');
+        document.querySelector('form').onsubmit = function() {
+            document.getElementById('assinatura_responsavel').value = document.getElementById('signature-resp').toDataURL();
+            document.getElementById('assinatura_aluno').value = document.getElementById('signature-aluno').toDataURL();
+        };
+    </script>
 </body>
 </html>
